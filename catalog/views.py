@@ -13,16 +13,16 @@ class ProductListView(ListView):
     context_object_name = 'products'
 
     def get_queryset(self):
-        # -25- Получаем все товары
+        # -25- Получаем базовый набор товаров
         queryset = super().get_queryset()
 
-        # -25- Сохраняем вывод в консоль для проверки первых 5 товаров
-        print("\n--- ПОСЛЕДНИЕ ПРОДУКТЫ В КОНСОЛИ ---")
-        for product in queryset[:5]:
-            print(f"ID: {product.id} | {product.name} | Цена: {product.price} руб.")
-        print("---------------------------------------\n")
+        # -28- Если пользователь модератор или суперпользователь — показываем все товары
+        if self.request.user.has_perm('catalog.can_unpublish_product'):
+            return queryset
 
-        return queryset
+        # -28- Для обычных пользователей и гостей выводим только опубликованные товары
+        return queryset.filter(is_published=True)
+
 
 
 class CategoriesListView(ListView):
@@ -97,22 +97,55 @@ class ProductUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     template_name = 'catalog/product_form.html'
     success_url = reverse_lazy('catalog:21-2_home1')
 
-    # -28- Метод динамически возвращает класс формы: модератору — форму публикации, владельцу — полную форму
+    # -28- Если пользователь владелец (или поле owner пустое, но пользователь его создал) — даем полную форму
     def get_form_class(self):
         product = self.get_object()
+
+        # -28- Приоритет владельцу: если товар принадлежит пользователю, даем редактировать всё
+        if product.owner == self.request.user:
+            return ProductForm
+
+        # -28- Если пользователь модератор и товар ЧУЖОЙ — даем только чекбокс публикации
         if self.request.user.has_perm('catalog.can_unpublish_product'):
             return ProductModeratorForm
+
         return ProductForm
 
-    # -28- Проверяем, что редактировать может либо владелец, либо модератор с кастомным правом
+    # -28- Проверяем право на вход: пускаем если владелец ИЛИ если есть права модератора
     def test_func(self):
         product = self.get_object()
-        is_owner = self.request.user == product.owner
+        is_owner = product.owner == self.request.user
         is_moderator = self.request.user.has_perm('catalog.can_unpublish_product')
         return is_owner or is_moderator
 
     def handle_no_permission(self):
         raise Http404("У вас нет прав для изменения этого продукта.")
+
+
+# -----28--корректировка
+
+# class ProductUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+#     """-26- Контроллер для редактирования существующего товара с динамическим разделением прав"""
+#     model = Product
+#     template_name = 'catalog/product_form.html'
+#     success_url = reverse_lazy('catalog:21-2_home1')
+#
+#     # -28- Метод динамически возвращает класс формы: модератору — форму публикации, владельцу — полную форму
+#     def get_form_class(self):
+#         product = self.get_object()
+#         if self.request.user.has_perm('catalog.can_unpublish_product'):
+#             return ProductModeratorForm
+#         return ProductForm
+#
+#     # -28- Проверяем, что редактировать может либо владелец, либо модератор с кастомным правом
+#     def test_func(self):
+#         product = self.get_object()
+#         is_owner = self.request.user == product.owner
+#         is_moderator = self.request.user.has_perm('catalog.can_unpublish_product')
+#         return is_owner or is_moderator
+#
+#     def handle_no_permission(self):
+#         raise Http404("У вас нет прав для изменения этого продукта.")
 
 
 

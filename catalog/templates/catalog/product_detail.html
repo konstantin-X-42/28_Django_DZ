@@ -26,7 +26,26 @@
         <div style="font-size: 2rem; font-weight: 600; margin-bottom: 20px; color: #212529;">
             {{ product.price }} ₽
         </div>
-        <button class="btn-outline-primary" style="background-color: #2f6bf2; color: #fff;">Оформить заказ</button>
+        <button class="btn-outline-primary" style="background-color: #2f6bf2; color: #fff; margin-bottom: 15px;">Оформить заказ</button>
+
+        <!-- -28- Блок управления правами на продукт -->
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #dee2e6; display: flex; gap: 10px;">
+
+            <!-- -28- Редактировать продукт может его владелец ИЛИ модератор с кастомным правом -->
+            {% if user == product.owner or perms.catalog.can_unpublish_product %}
+                <a href="{% url 'catalog:update_product' product.pk %}" class="btn-outline-primary" style="background-color: #ffc107; color: #000; border-color: #ffc107; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">
+                    Редактировать
+                </a>
+            {% endif %}
+
+            <!-- -28- Удалять продукт может его владелец ИЛИ модератор с общим правом на удаление -->
+            {% if user == product.owner or perms.catalog.delete_product %}
+                <a href="{% url 'catalog:delete_product' product.pk %}" class="btn-outline-primary" style="background-color: #dc3545; color: #fff; border-color: #dc3545; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">
+                    Удалить
+                </a>
+            {% endif %}
+
+        </div>
     </div>
 </div>
 {% endblock %}
