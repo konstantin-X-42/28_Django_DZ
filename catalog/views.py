@@ -3,8 +3,8 @@ from django.views.generic import ListView, TemplateView, DetailView, CreateView,
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin # -28- Импортируем миксины для проверки прав доступа
 from django.http import Http404 # -28- Импортируем исключение для запрета доступа
 from catalog.models import Product, ContactInfo, Category
-from catalog.forms import ProductForm
-
+from catalog.forms import (ProductForm,
+                           ProductModeratorForm) # -28- импорт формы views.py
 
 class ProductListView(ListView):
     """-25- Контроллер главной страницы"""
@@ -92,20 +92,28 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
 # -26- ProductUpdateView и ProductDeleteView контроллеры для полного CRUD
 
 class ProductUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    """-26- Контроллер для редактирования существующего товара"""
+    """-26- Контроллер для редактирования существующего товара с динамическим разделением прав"""
     model = Product
-    form_class = ProductForm
-    template_name = 'catalog/product_form.html'  # -26- Использует тот же шаблон, что и создание
-    success_url = reverse_lazy('catalog:21-2_home1')  # -26- Перенаправление на главную после редактирования
+    template_name = 'catalog/product_form.html'
+    success_url = reverse_lazy('catalog:21-2_home1')
 
-    # -28- Редактировать продукт может только его создатель (owner)
+    # -28- Метод динамически возвращает класс формы: модератору — форму публикации, владельцу — полную форму
+    def get_form_class(self):
+        product = self.get_object()
+        if self.request.user.has_perm('catalog.can_unpublish_product'):
+            return ProductModeratorForm
+        return ProductForm
+
+    # -28- Проверяем, что редактировать может либо владелец, либо модератор с кастомным правом
     def test_func(self):
         product = self.get_object()
-        return self.request.user == product.owner
+        is_owner = self.request.user == product.owner
+        is_moderator = self.request.user.has_perm('catalog.can_unpublish_product')
+        return is_owner or is_moderator
 
-    # -28- Если проверку не прошёл — возвращаем ошибку 403 / 404
     def handle_no_permission(self):
-        raise Http404("Вы не являетесь владельцем этого продукта.")
+        raise Http404("У вас нет прав для изменения этого продукта.")
+
 
 
 class ProductDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
@@ -124,6 +132,7 @@ class ProductDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     # -28- Если проверку не прошёл — возвращаем ошибку 403 / 404
     def handle_no_permission(self):
         raise Http404("У вас нет прав на удаление этого продукта.")
+
 
 
 class ProductManageListView(ListView):
