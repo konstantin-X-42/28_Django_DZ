@@ -66,3 +66,18 @@ class ProductForm(forms.ModelForm):
             if ext not in valid_extensions:
                 raise ValidationError("Допускаются только файлы форматов JPEG или PNG.")
         return image
+
+
+# -28- Специальная форма для модераторов, позволяющая только менять статус публикации
+class ProductModeratorForm(forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = ['is_published']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # -28- Применяем стилизацию для поля модератора
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({
+                'style': 'margin-bottom: 15px; transform: scale(1.2); margin-left: 10px;'
+            })

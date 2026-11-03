@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings # -28- импортируем настройки для получения связи с кастомной моделью пользователя
 
 class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name='Наименование')
@@ -21,13 +22,28 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата последнего изменения')
 
+    # -28- Поле добавлено, тип BooleanField, default=False указывает на статус «не опубликован»
+    is_published = models.BooleanField(default=False, verbose_name='Опубликован')
+
+    # -28- Связываем продукт с моделью пользователя через ForeignKey. При удалении пользователя продукты остаются (owner=null)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        verbose_name='Владелец',
+        blank=True,
+        null=True
+    )
+
     def __str__(self):
         return self.name
 
     class Meta:
         verbose_name = 'Продукт'
         verbose_name_plural = 'Продукты'
-
+        # -28- Добавляем кастомные права к модели продукта для роли «Модератор продуктов»
+        permissions = [
+            ("can_unpublish_product", "Может отменять публикацию продукта"),
+        ]
 
 
 class ContactInfo(models.Model):
