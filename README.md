@@ -56,7 +56,7 @@
 ### 1. Клонирование репозитория и переход в рабочую ветку
 ```bash
 git clone <ссылка_на_твой_репозиторий>
-cd 27_Django_DZ
+cd 28_Django_DZ
 ```
 
 ### 2. Настройка файлов окружения
@@ -65,7 +65,7 @@ cd 27_Django_DZ
 SECRET_KEY=django-insecure-your-actual-secret-key
 DEBUG=True
 
-NAME=23_Django_DZ
+NAME=28_Django_DZ
 USER=postgres
 PASSWORD=ваш_пароль_от_postgres
 HOST=localhost
@@ -91,13 +91,13 @@ python manage.py migrate
 ### 5. Создание суперпользователя и загрузка демо-товаров
 ```bash
 python manage.py createsuperuser
-python manage.py loaddata catalog/fixtures/27_catalog.json
+python manage.py loaddata catalog/fixtures/28_catalog.json
 python manage.py runserver
 ```
-* Главная страница каталога товаров: [http://127.0.0](http://127.0.0)
-* Главная страница списка статей блога: [http://127.0.0blogs/](http://127.0.0blogs/)
-* Страница регистрации пользователей: [http://127.0.0users/register/](http://127.0.0users/register/)
-* Административная панель Django: [http://127.0.0admin/](http://127.0.0admin/)
+* Главная страница каталога товаров: [http://127.0.0.1:8000/](http://127.0.0)
+* Главная страница списка статей блога: [http://127.0.0.1:8000/blogs/](http://127.0.0blogs/)
+* Страница регистрации пользователей: [http://127.0.0.1:8000/users/register/](http://127.0.0users/register/)
+* Административная панель Django: [http://127.0.0.1:8000/admin/](http://127.0.0admin/)
 
 ---
 
